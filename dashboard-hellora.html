@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dashboard · Hellora Consultoria</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F7F5F2;
+  --offwhite:#FDFCFB;
+  --card:#FFFFFF;
+  --border:#EDE8F5;
+  --purple:#9B72BB;
+  --purple-light:#E8E0F0;
+  --purple-mid:#C4A8D8;
+  --purple-dark:#6D4D8A;
+  --green:#6BB58A;
+  --green-light:#DFF0E8;
+  --green-mid:#A8D4B8;
+  --red:#E57373;
+  --text:#2C2438;
+  --text2:#6B5F7A;
+  --text3:#A898B8;
+  --shadow:rgba(107,77,138,0.08);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto}
+
+/* PIN */
+.pin-screen{position:fixed;inset:0;background:var(--offwhite);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px}
+.pin-screen.hidden{display:none}
+.pin-logo{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--purple-dark);margin-bottom:4px;text-align:center}
+.pin-sub{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.15em;margin-bottom:40px;text-align:center}
+.pin-dots{display:flex;gap:14px;margin-bottom:32px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:white;transition:all .15s}
+.pin-dot.filled{background:var(--purple);border-color:var(--purple)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.pin-key{padding:18px;background:white;border:1.5px solid var(--border);border-radius:14px;font-size:22px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Playfair Display',serif;transition:all .12s;text-align:center;box-shadow:0 2px 8px var(--shadow)}
+.pin-key:active{background:var(--purple-light);border-color:var(--purple-mid);transform:scale(.96)}
+.pin-err{font-size:13px;color:var(--red);height:20px;margin-top:14px;text-align:center;font-weight:500}
+
+/* APP */
+#app{display:none;padding-bottom:20px}
+#app.visible{display:block}
+
+/* HEADER */
+.header{background:var(--offwhite);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px var(--shadow)}
+.header-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--purple-dark)}
+.header-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-top:1px}
+.sync-btn{background:var(--purple-light);border:none;border-radius:10px;padding:8px 14px;color:var(--purple-dark);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sync-btn:active{opacity:.8}
+
+/* CONTENT */
+.content{padding:16px}
+
+/* STATUS */
+.status-bar{border-radius:12px;padding:10px 14px;font-size:12px;margin-bottom:14px;text-align:center;font-weight:600;border:1px solid}
+.status-bar.loading{background:var(--purple-light);border-color:var(--purple-mid);color:var(--purple-dark)}
+.status-bar.ok{background:var(--green-light);border-color:var(--green-mid);color:#2D6A4F}
+.status-bar.error{background:#FFF0F0;border-color:#FFAAAA;color:var(--red)}
+
+/* SECTION LABEL */
+.sec-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);font-weight:600;margin:16px 0 8px}
+
+/* ALUNO GRID */
+.aluno-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.aluno-card{background:white;border:1.5px solid var(--border);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px var(--shadow)}
+.aluno-card:active{transform:scale(.97)}
+.aluno-card.has-data{border-color:var(--purple-mid);background:var(--purple-light)}
+.aluno-card.selected{border-color:var(--purple);background:var(--purple);box-shadow:0 4px 16px rgba(155,114,187,.3)}
+.aluno-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.2}
+.aluno-card.selected .aluno-name{color:white}
+.aluno-card.has-data .aluno-name{color:var(--purple-dark)}
+.aluno-date{font-size:9px;color:var(--text3);margin-top:3px}
+.aluno-card.selected .aluno-date{color:rgba(255,255,255,.7)}
+
+/* DETAIL */
+.detail-header{background:linear-gradient(135deg,var(--purple-light),var(--green-light));border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px}
+.detail-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--purple-dark);margin-bottom:2px}
+.detail-id{font-size:11px;color:var(--text3)}
+.detail-sync{font-size:11px;color:var(--text2);margin-top:6px}
+
+/* WEEK TABS */
+.week-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.week-tabs::-webkit-scrollbar{display:none}
+.wtab{flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.wtab.has-data{border-color:var(--purple-mid);color:var(--purple-dark)}
+.wtab.active{background:var(--purple);border-color:var(--purple);color:white}
+
+/* CARDS */
+.d-card{background:white;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px var(--shadow)}
+.d-card-title{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--purple-dark);margin-bottom:12px}
+
+/* METRIC */
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.metric-row:last-child{border:none}
+.metric-name{font-size:12px;color:var(--text2)}
+.metric-right{display:flex;align-items:center;gap:10px}
+.metric-bar-wrap{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.metric-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple-mid),var(--green-mid))}
+.metric-val{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--purple-dark);min-width:20px;text-align:right}
+
+/* TREINO ROW */
+.treino-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.treino-row:last-child{border:none}
+.treino-name{font-size:13px;font-weight:600;color:var(--text)}
+.treino-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.treino-pct{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--purple)}
+.treino-pct.full{color:var(--green)}
+
+/* CARGA ROW */
+.carga-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.carga-row:last-child{border:none}
+.carga-name{color:var(--text2);flex:1;text-transform:capitalize}
+.carga-val{font-weight:600;color:var(--purple-dark)}
+
+/* NOTA */
+.nota-box{background:var(--purple-light);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--purple-dark);line-height:1.5;font-style:italic;margin-top:8px}
+
+/* EMPTY */
+.empty-box{text-align:center;padding:24px;color:var(--text3);font-size:13px;line-height:1.6}
+
+/* SUMMARY STATS */
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px var(--shadow)}
+.stat-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.stat-card.blue .stat-val{color:var(--purple-dark)}
+.stat-card.green .stat-val{color:var(--green)}
+.stat-card.yellow .stat-val{color:#B45309}
+</style>
+</head>
+<body>
+
+<!-- PIN -->
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-logo">Hellora</div>
+  <div class="pin-sub">Dashboard · Professor</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+    <div class="pin-dot" id="pd4"></div>
+    <div class="pin-dot" id="pd5"></div>
+  </div>
+  <div class="pin-grid">
+    <div class="pin-key" onclick="pinPress('1')">1</div>
+    <div class="pin-key" onclick="pinPress('2')">2</div>
+    <div class="pin-key" onclick="pinPress('3')">3</div>
+    <div class="pin-key" onclick="pinPress('4')">4</div>
+    <div class="pin-key" onclick="pinPress('5')">5</div>
+    <div class="pin-key" onclick="pinPress('6')">6</div>
+    <div class="pin-key" onclick="pinPress('7')">7</div>
+    <div class="pin-key" onclick="pinPress('8')">8</div>
+    <div class="pin-key" onclick="pinPress('9')">9</div>
+    <div class="pin-key" onclick="pinClear()" style="font-size:12px;color:var(--text3)">Limpar</div>
+    <div class="pin-key" onclick="pinPress('0')">0</div>
+    <div class="pin-key" onclick="pinBack()" style="font-size:20px">⌫</div>
+  </div>
+  <div class="pin-err" id="pin-err"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title">Dashboard</div>
+      <div class="header-sub">Hellora Consultoria</div>
+    </div>
+    <button class="sync-btn" onclick="loadAll()">↻ Atualizar</button>
+  </div>
+
+  <div class="content">
+    <div id="status-bar" class="status-bar loading">⏳ Carregando...</div>
+
+    <!-- SUMMARY -->
+    <div class="summary-grid">
+      <div class="stat-card blue"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">Alunos</div></div>
+      <div class="stat-card green"><div class="stat-val" id="stat-ativos">0</div><div class="stat-lbl">Com dados</div></div>
+      <div class="stat-card yellow"><div class="stat-val" id="stat-semanas">0</div><div class="stat-lbl">Avaliações</div></div>
+    </div>
+
+    <div class="sec-lbl">Todos os Alunos</div>
+    <div class="aluno-grid" id="aluno-grid"></div>
+
+    <div id="aluno-detail"></div>
+  </div>
+</div>
+
+<script>
+var FIREBASE_URL = 'https://helloradana-consultoria-default-rtdb.firebaseio.com';
+var PIN = '210115';
+
+var ALUNOS = [
+  {id:'diego-abadia',   nome:'Diego'},
+  {id:'jessica-silva',  nome:'Jessica'},
+  {id:'stephanie',      nome:'Stephanie'},
+  {id:'julia',          nome:'Júlia'},
+  {id:'beatriz',        nome:'Beatriz'},
+  {id:'jamyle',         nome:'Jamyle'},
+  {id:'mayara',         nome:'Mayara'},
+  {id:'arlen',          nome:'Arlen'},
+  {id:'zion',           nome:'Zion'},
+  {id:'laura',          nome:'Laura'},
+  {id:'sabrina-macedo', nome:'Sabrina'},
+  {id:'rafaela',        nome:'Rafaela'},
+  {id:'leonardo',       nome:'Leonardo'},
+  {id:'bianca',         nome:'Bianca'}
+];
+
+var METRICS = [
+  {key:'frequência', lbl:'Frequência'},
+  {key:'humor',      lbl:'Humor'},
+  {key:'energia',    lbl:'Energia'},
+  {key:'dificuldade',lbl:'Dificuldade'},
+  {key:'dor_/_desconforto', lbl:'Dor / Desconforto'},
+  {key:'sono',       lbl:'Sono'},
+  {key:'alimentação',lbl:'Alimentação'}
+];
+
+// also check alternate key formats
+var METRIC_KEYS = [
+  ['frequência','freq','frequencia'],
+  ['humor'],
+  ['energia'],
+  ['dificuldade','dific'],
+  ['dor_/_desconforto','dor','dor_desconforto'],
+  ['sono'],
+  ['alimentação','alim','alimentacao']
+];
+
+var allData = {};
+var selectedAluno = null;
+var selectedWeek = null;
+
+// ── PIN ──
+var pinBuf = '';
+function pinPress(d) {
+  if (pinBuf.length >= 6) return;
+  pinBuf += d;
+  updateDots();
+  if (pinBuf.length === 6) setTimeout(checkPin, 150);
+}
+function pinBack() { pinBuf = pinBuf.slice(0,-1); updateDots(); }
+function pinClear() { pinBuf = ''; updateDots(); }
+function updateDots() {
+  for (var i=0;i<6;i++)
+    document.getElementById('pd'+i).classList.toggle('filled', i < pinBuf.length);
+}
+function checkPin() {
+  if (pinBuf === PIN) {
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    loadAll();
+  } else {
+    document.getElementById('pin-err').textContent = 'PIN incorreto. Tente novamente.';
+    pinBuf = ''; updateDots();
+  }
+}
+
+// ── LOAD DATA ──
+function loadAll() {
+  setStatus('loading', '⏳ Carregando dados de ' + ALUNOS.length + ' alunos...');
+  allData = {};
+  var pending = ALUNOS.length;
+  var totalAvals = 0;
+
+  ALUNOS.forEach(function(a) {
+    fetch(FIREBASE_URL + '/alunos/' + a.id + '/state.json')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d && typeof d === 'object') {
+          allData[a.id] = d;
+          // count evaluations
+          for (var k in d) {
+            if (k.indexOf('eval-w') === 0 && Object.keys(d[k]).length > 0) totalAvals++;
+          }
+        }
+        pending--;
+        if (pending === 0) done();
+      })
+      .catch(function() { pending--; if (pending === 0) done(); });
+  });
+
+  function done() {
+    var count = Object.keys(allData).length;
+    setStatus('ok', '✅ ' + count + ' aluno(s) com dados · ' + new Date().toLocaleTimeString('pt-BR'));
+    document.getElementById('stat-total').textContent = ALUNOS.length;
+    document.getElementById('stat-ativos').textContent = count;
+    document.getElementById('stat-semanas').textContent = totalAvals;
+    renderGrid();
+    if (selectedAluno) renderDetail(selectedAluno);
+  }
+}
+
+function setStatus(type, msg) {
+  var el = document.getElementById('status-bar');
+  el.className = 'status-bar ' + type;
+  el.textContent = msg;
+}
+
+// ── GRID ──
+function renderGrid() {
+  var html = '';
+  for (var i=0; i<ALUNOS.length; i++) {
+    var a = ALUNOS[i];
+    var d = allData[a.id];
+    var hasData = !!d;
+    var isSelected = selectedAluno === a.id;
+    var dateStr = '';
+    if (hasData && d._updated) {
+      dateStr = new Date(d._updated).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    }
+    html += '<div class="aluno-card' + (hasData?' has-data':'') + (isSelected?' selected':'') + '" onclick="selectAluno(\'' + a.id + '\')">';
+    html += '<div class="aluno-name">' + a.nome + '</div>';
+    html += '<div class="aluno-date">' + (dateStr || 'sem dados') + '</div>';
+    html += '</div>';
+  }
+  document.getElementById('aluno-grid').innerHTML = html;
+}
+
+// ── SELECT ALUNO ──
+function selectAluno(id) {
+  selectedAluno = id;
+  selectedWeek = null;
+  renderGrid();
+  renderDetail(id);
+  setTimeout(function() {
+    var el = document.getElementById('aluno-detail');
+    if (el) el.scrollIntoView({behavior:'smooth'});
+  }, 100);
+}
+
+function renderDetail(id) {
+  var a = ALUNOS.filter(function(x){return x.id===id;})[0];
+  var d = allData[id];
+  var detail = document.getElementById('aluno-detail');
+
+  if (!d) {
+    detail.innerHTML = '<div class="sec-lbl" style="margin-top:20px">' + a.nome + '</div><div class="d-card"><div class="empty-box">Nenhum dado registrado ainda para ' + a.nome + '.</div></div>';
+    return;
+  }
+
+  var upd = d._updated ? new Date(d._updated).toLocaleString('pt-BR') : '—';
+
+  // Find weeks with data
+  var evalWeeks = [];
+  var treinoWeeks = [];
+  for (var w=1; w<=20; w++) {
+    var ek = 'eval-w'+w;
+    if (d[ek] && Object.keys(d[ek]).length > 0) evalWeeks.push(w);
+    if (hasAnyCargo(d, w) || hasTreinoData(d, w)) treinoWeeks.push(w);
+  }
+  var allWeeks = unique(evalWeeks.concat(treinoWeeks)).sort(function(a,b){return a-b;});
+
+  var html = '<div class="sec-lbl" style="margin-top:20px">' + a.nome + ' · Progresso</div>';
+  html += '<div class="detail-header">';
+  html += '<div class="detail-name">' + a.nome + '</div>';
+  html += '<div class="detail-id">' + a.id + '</div>';
+  html += '<div class="detail-sync">Última atualização: ' + upd + '</div>';
+  html += '</div>';
+
+  if (allWeeks.length === 0) {
+    html += '<div class="d-card"><div class="empty-box">Nenhuma semana preenchida ainda.</div></div>';
+    detail.innerHTML = html;
+    return;
+  }
+
+  if (!selectedWeek || allWeeks.indexOf(selectedWeek) < 0) selectedWeek = allWeeks[allWeeks.length-1];
+
+  // Week tabs
+  html += '<div class="week-tabs" id="week-tabs">';
+  for (var w=1; w<=20; w++) {
+    var hasW = allWeeks.indexOf(w) >= 0;
+    html += '<div class="wtab' + (hasW?' has-data':'') + (selectedWeek===w?' active':'') + '" onclick="selectWeek(\'' + id + '\',' + w + ')">' + w + '</div>';
+  }
+  html += '</div>';
+
+  // Week panel
+  html += buildWeekPanel(id, d, selectedWeek);
+
+  detail.innerHTML = html;
+  setTimeout(function() {
+    var active = document.querySelector('.wtab.active');
+    if (active) active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+  }, 50);
+}
+
+function selectWeek(id, w) {
+  selectedWeek = w;
+  renderDetail(id);
+}
+
+function buildWeekPanel(id, d, w) {
+  var html = '';
+  var evalData = d['eval-w'+w] || null;
+
+  // AVALIAÇÃO
+  html += '<div class="d-card"><div class="d-card-title">📊 Avaliação — Semana ' + w + '</div>';
+  if (evalData && Object.keys(evalData).length > 0) {
+    for (var m=0; m<METRICS.length; m++) {
+      var metric = METRICS[m];
+      var val = getMetricVal(evalData, METRIC_KEYS[m]);
+      if (!val && val !== 0) continue;
+      var numVal = parseFloat(val);
+      var pct = isNaN(numVal) ? 0 : (numVal / 5 * 100);
+      html += '<div class="metric-row">';
+      html += '<span class="metric-name">' + metric.lbl + '</span>';
+      html += '<div class="metric-right">';
+      if (!isNaN(numVal)) html += '<div class="metric-bar-wrap"><div class="metric-bar" style="width:' + pct + '%"></div></div>';
+      html += '<span class="metric-val">' + val + '</span>';
+      html += '</div></div>';
+    }
+    if (evalData.nota || evalData.obs || evalData.notes) {
+      html += '<div class="nota-box">"' + (evalData.nota || evalData.obs || evalData.notes) + '"</div>';
+    }
+  } else {
+    html += '<div class="empty-box" style="padding:16px 0">Avaliação não preenchida nesta semana.</div>';
+  }
+  html += '</div>';
+
+  // TREINOS
+  var treinos = getTreinoInfo(d, w);
+  html += '<div class="d-card"><div class="d-card-title">💪 Treinos — Semana ' + w + '</div>';
+  if (treinos.length > 0) {
+    for (var t=0; t<treinos.length; t++) {
+      var tr = treinos[t];
+      var pctT = Math.round(tr.done/tr.total*100);
+      html += '<div class="treino-row">';
+      html += '<div><div class="treino-name">' + tr.label + '</div><div class="treino-sub">' + tr.done + '/' + tr.total + ' exercícios</div></div>';
+      html += '<div class="treino-pct' + (pctT===100?' full':'') + '">' + pctT + '%</div>';
+      html += '</div>';
+    }
+  } else {
+    html += '<div class="empty-box" style="padding:16px 0">Nenhum treino registrado.</div>';
+  }
+  html += '</div>';
+
+  // CARGAS
+  var cargas = getCargas(d, w);
+  if (cargas.length > 0) {
+    html += '<div class="d-card"><div class="d-card-title">🏋️ Cargas — Semana ' + w + '</div>';
+    for (var c=0; c<cargas.length; c++) {
+      html += '<div class="carga-row"><span class="carga-name">' + cargas[c].name + '</span><span class="carga-val">' + cargas[c].val + ' kg</span></div>';
+    }
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ── HELPERS ──
+function getMetricVal(evalData, keys) {
+  for (var i=0; i<keys.length; i++) {
+    if (evalData[keys[i]] !== undefined && evalData[keys[i]] !== null && evalData[keys[i]] !== '') return evalData[keys[i]];
+  }
+  return null;
+}
+
+function hasTreinoData(d, w) {
+  for (var k in d) {
+    if (k.indexOf('w'+w+'-') === 0 && d[k] && d[k].done) return true;
+  }
+  return false;
+}
+
+function hasAnyCargo(d, w) {
+  for (var k in d) {
+    if (k.indexOf('w'+w+'-') === 0 && d[k] && d[k].load) return true;
+  }
+  return false;
+}
+
+function getTreinoInfo(d, w) {
+  var result = [];
+  var treinos = ['A','B','C','D'];
+  for (var t=0; t<treinos.length; t++) {
+    var tr = treinos[t];
+    var keys = [];
+    for (var k in d) {
+      if (k.indexOf('w'+w+'-'+tr+'-') === 0) keys.push(k);
+    }
+    if (keys.length === 0) continue;
+    var done = keys.filter(function(k){return d[k]&&d[k].done;}).length;
+    result.push({label:'Treino '+tr, done:done, total:keys.length});
+  }
+  return result;
+}
+
+function getCargas(d, w) {
+  var result = [];
+  for (var k in d) {
+    if (k.indexOf('w'+w+'-') === 0 && d[k] && d[k].load && d[k].load > 0) {
+      var parts = k.split('-');
+      var name = parts.slice(2).join(' ');
+      result.push({name:name, val:d[k].load});
+    }
+  }
+  return result;
+}
+
+function unique(arr) {
+  var seen = {};
+  return arr.filter(function(x){return seen[x]?false:(seen[x]=true);});
+}
+</script>
+</body>
+</html>
